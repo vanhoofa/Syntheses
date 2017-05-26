@@ -1,0 +1,59 @@
+
+declare
+proc {MapRecord R1 F R2}
+   A={Record.arity R1}
+   proc {Loop L}
+      case L of nil then skip
+      [] H|T then
+	 thread R2.H={F R1.H} end
+	 {Loop T}
+      end
+   end
+in
+   R2={Record.make {Record.label R1} A}
+   {Loop A}
+end
+
+% a)
+
+{Show {MapRecord
+       '#'(a:1 b:2 c:3 d:4 e:5 f:6 g:7)
+       fun {$ X} {Delay 1000} 2*X end}}
+% Dans l'emulateur, les variables ne sont pas encore liees a l'affichage
+% et la fonction Show ne genere pas un thread qui attendra que les vars
+% soient liees
+
+{Browse {MapRecord
+	 '#'(a:1 b:2 c:3 d:4 e:5 f:6 g:7)
+	 fun {$ X} {Delay 1000} 2*X end}}
+% La fonction Browse va attendre que les variables soient liees, et
+% actualisera des que possible les valeurs
+
+% b)
+
+declare
+proc {MapRecord R1 F V R2}
+   A={Record.arity R1}
+   proc {Loop L I}
+      case L of nil then I='unit'
+      [] H|T then local J in
+		     thread R2.H={F R1.H} I=J end
+		     {Loop T J}
+		  end
+      end
+   end
+in
+   R2={Record.make {Record.label R1} A}
+   {Loop A V}
+end
+
+
+% c)
+
+local V U in 
+   U={MapRecord
+	    '#'(a:1 b:2 c:3 d:4 e:5 f:6 g:7)
+      fun {$ X} {Delay 1000} 2*X end V}
+   {Wait V}
+   {Show U}
+end
